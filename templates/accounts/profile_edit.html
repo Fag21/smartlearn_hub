@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load tailwind_filters %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h1 class="text-2xl font-bold text-gray-900">Edit Profile</h1>
+                <p class="text-gray-600 mt-1">Update your personal information</p>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data" class="p-6 space-y-6">
+                {% csrf_token %}
+                
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div>
+                        {{ form.first_name|as_crispy_field }}
+                    </div>
+                    <div>
+                        {{ form.last_name|as_crispy_field }}
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div>
+                        {{ form.username|as_crispy_field }}
+                    </div>
+                    <div>
+                        {{ form.email|as_crispy_field }}
+                    </div>
+                </div>
+                
+                {{ form.bio|as_crispy_field }}
+                
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div>
+                        {{ form.location|as_crispy_field }}
+                    </div>
+                    <div>
+                        {{ form.website|as_crispy_field }}
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div>
+                        {{ form.phone_number|as_crispy_field }}
+                    </div>
+                    <div>
+                        {{ form.date_of_birth|as_crispy_field }}
+                    </div>
+                </div>
+                
+                {{ form.profile_picture|as_crispy_field }}
+                
+                <div class="flex justify-end space-x-3 pt-6">
+                    <a href="{% url 'accounts:profile' username=user.username %}" 
+                       class="bg-white text-gray-700 px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-200">
+                        Cancel
+                    </a>
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,16 +3,17 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', TemplateView.as_view(template_name='home.html'), name='home'),
+    
+    # Include accounts URLs without namespace for default auth views
     path('accounts/', include('accounts.urls')),
-    path('courses/', include('courses.urls')),
-    path('analytics/', include('analytics.urls')),
-    path('ai/', include('ai_assistant.urls')),
-    path('notes/', include('notes.urls')),
-    path('collaboration/', include('collaboration.urls')),
+    
+    # Add default auth URLs as fallback
+    path('auth/', include('django.contrib.auth.urls')),
 ]
 
 if settings.DEBUG:

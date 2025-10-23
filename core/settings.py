@@ -127,7 +127,14 @@ CHANNEL_LAYERS = {
     },
 }
 
+# Custom User Model
+AUTH_USER_MODEL = 'accounts.User'
+
 # Login/Logout URLs
-LOGIN_REDIRECT_URL = 'dashboard'
+LOGIN_REDIRECT_URL = 'analytics:dashboard'
 LOGOUT_REDIRECT_URL = 'home'
-LOGIN_URL = 'login'
+LOGIN_URL = 'accounts:login'
+
+# Crispy Forms
+CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
+CRISPY_TEMPLATE_PACK = "tailwind"

@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Welcome Section -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Welcome back, {{ user.first_name }}! 👋</h1>
+            <p class="text-gray-600 mt-2">Here's your learning progress</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Study Time -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-100 rounded-lg">
+                        <span class="text-blue-600">⏱️</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Total Study Time</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ user_stats.total_study_time }}min</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Streak -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-100 rounded-lg">
+                        <span class="text-green-600">🔥</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Current Streak</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ user_stats.days_streak }} days</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lessons Completed -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-purple-100 rounded-lg">
+                        <span class="text-purple-600">✅</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Lessons Completed</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ total_lessons_completed }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Study -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-orange-100 rounded-lg">
+                        <span class="text-orange-600">📊</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">This Week</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ weekly_study_time }}min</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Daily Goal -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Today's Goal</h2>
+                    <div class="space-y-4">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Progress</span>
+                            <span class="text-gray-900 font-medium">{{ daily_goal.actual_minutes }}/{{ daily_goal.target_minutes }} minutes</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-4">
+                            <div class="bg-green-600 h-4 rounded-full" 
+                                 style="width: {% widthratio daily_goal.actual_minutes daily_goal.target_minutes 100 %}%">
+                            </div>
+                        </div>
+                        {% if daily_goal.is_achieved %}
+                        <p class="text-green-600 font-medium">🎉 Goal achieved! Great job!</p>
+                        {% else %}
+                        <p class="text-gray-600">Keep going! You're doing great!</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Recent Courses -->
+                <div class="bg-white rounded-lg shadow p-6 mt-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Continue Learning</h2>
+                    <div class="space-y-4">
+                        {% for enrollment in enrollments %}
+                        <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                            <div>
+                                <h3 class="font-semibold text-gray-900">{{ enrollment.course.title }}</h3>
+                                <p class="text-sm text-gray-600">{{ enrollment.progress|floatformat:0 }}% complete</p>
+                            </div>
+                            <a href="{% url 'courses:course_learn' enrollment.course.pk %}" 
+                               class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
+                                Continue
+                            </a>
+                        </div>
+                        {% empty %}
+                        <p class="text-gray-500 text-center py-4">No courses enrolled yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
+                    <div class="space-y-4">
+                        {% for session in recent_sessions %}
+                        <div class="border-l-4 border-blue-500 pl-4 py-2">
+                            <p class="font-medium text-gray-900">{{ session.course.title }}</p>
+                            <p class="text-sm text-gray-600">{{ session.duration }} minutes</p>
+                            <p class="text-xs text-gray-500">{{ session.start_time|date:"M d, g:i A" }}</p>
+                        </div>
+                        {% empty %}
+                        <p class="text-gray-500 text-center py-4">No recent activity.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

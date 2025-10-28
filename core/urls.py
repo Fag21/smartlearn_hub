@@ -8,13 +8,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', TemplateView.as_view(template_name='home.html'), name='home'),
     
-    # Apps
+    # Apps with namespaces
     path('accounts/', include('accounts.urls')),
     path('courses/', include('courses.urls')),
     path('analytics/', include('analytics.urls')),
-    # path('ai/', include('ai_assistant.urls')),  # We'll create this next
-    # path('notes/', include('notes.urls')),      # We'll create this next
-    # path('collaboration/', include('collaboration.urls')),  # We'll create this next
 ]
 
 if settings.DEBUG:

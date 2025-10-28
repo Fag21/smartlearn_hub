@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from datetime import timedelta
+from accounts import models
 from courses.models import Enrollment, LessonProgress
 from .models import UserLearningStat, StudySession, DailyGoal
 from django.db.models import Sum 

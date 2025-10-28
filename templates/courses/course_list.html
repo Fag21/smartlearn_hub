@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Browse Courses</h1>
+            <p class="text-gray-600 mt-2">Discover your next learning journey</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <div class="flex flex-wrap gap-4">
+                <!-- Search -->
+                <div class="flex-1 min-w-[300px]">
+                    <input type="text" placeholder="Search courses..." 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <!-- Category Filter -->
+                <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.name }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+                
+                <!-- Level Filter -->
+                <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Levels</option>
+                    {% for level in levels %}
+                    <option value="{{ level.0 }}">{{ level.1 }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- Courses Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {% for course in courses %}
+            <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+                {% if course.thumbnail %}
+                <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" 
+                     class="w-full h-48 object-cover rounded-t-lg">
+                {% else %}
+                <div class="w-full h-48 bg-gradient-to-br from-blue-500 to-purple-600 rounded-t-lg flex items-center justify-center">
+                    <span class="text-white text-2xl font-bold">{{ course.title|first }}</span>
+                </div>
+                {% endif %}
+                
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-blue-600 font-medium">{{ course.level|title }}</span>
+                        {% if course.is_free %}
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Free</span>
+                        {% else %}
+                        <span class="text-gray-900 font-bold">${{ course.price }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2">{{ course.title }}</h3>
+                    <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ course.short_description }}</p>
+                    
+                    <div class="flex items-center justify-between text-sm text-gray-500">
+                        <span>{{ course.duration }}h • {{ course.student_count }} students</span>
+                        <span>★ {{ course.avg_rating|default:"0.0" }}</span>
+                    </div>
+                    
+                    <a href="{% url 'courses:course_detail' course.pk %}" 
+                       class="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-lg text-center block hover:bg-blue-700 transition duration-200">
+                        View Course
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-12">
+                <p class="text-gray-500 text-lg">No courses found.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="mt-8 flex justify-center">
+            <nav class="flex space-x-2">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 text-gray-500 hover:text-gray-700">← Previous</a>
+                {% endif %}
+                
+                <span class="px-3 py-2 text-blue-600 font-medium">{{ page_obj.number }}</span>
+                
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 text-gray-500 hover:text-gray-700">Next →</a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

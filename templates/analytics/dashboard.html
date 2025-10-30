@@ -5,7 +5,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Welcome Section -->
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Welcome back, {{ user.first_name }}! 👋</h1>
+            <h1 class="text-3xl font-bold text-gray-900">Welcome back, {{ user.first_name|default:user.username }}! 👋</h1>
             <p class="text-gray-600 mt-2">Here's your learning progress</p>
         </div>
 
@@ -76,7 +76,7 @@
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-4">
                             <div class="bg-green-600 h-4 rounded-full" 
-                                 style="width: {% widthratio daily_goal.actual_minutes daily_goal.target_minutes 100 %}">
+                                 style="width: {% widthratio daily_goal.actual_minutes daily_goal.target_minutes 100 %}%">
                             </div>
                         </div>
                         {% if daily_goal.is_achieved %}
@@ -103,7 +103,7 @@
                             </a>
                         </div>
                         {% empty %}
-                        <p class="text-gray-500 text-center py-4">No courses enrolled yet.</p>
+                        <p class="text-gray-500 text-center py-4">No courses enrolled yet. <a href="{% url 'courses:course_list' %}" class="text-blue-600">Browse courses</a></p>
                         {% endfor %}
                     </div>
                 </div>

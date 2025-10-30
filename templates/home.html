@@ -16,10 +16,10 @@
                     Go to Dashboard
                 </a>
             {% else %}
-                <a href="{% url 'register' %}" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700">
+                <a href="{% url 'accounts:register' %}" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700">
                     Get Started
                 </a>
-                <a href="{% url 'login' %}" class="border border-blue-600 text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50">
+                <a href="{% url 'accounts:login' %}" class="border border-blue-600 text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50">
                     Sign In
                 </a>
             {% endif %}

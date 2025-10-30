@@ -131,7 +131,8 @@ CHANNEL_LAYERS = {
 AUTH_USER_MODEL = 'accounts.User'
 
 # Login/Logout URLs
-LOGIN_REDIRECT_URL = 'analytics:dashboard'
+# Login/Logout URLs
+LOGIN_REDIRECT_URL = 'home'  # Changed from 'analytics:dashboard' to 'home'
 LOGOUT_REDIRECT_URL = 'home'
 LOGIN_URL = 'accounts:login'
 
@@ -139,6 +140,4 @@ LOGIN_URL = 'accounts:login'
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"
 # Login/Logout URLs
-LOGIN_REDIRECT_URL = 'analytics:dashboard'  # This should match the namespaced URL
-LOGOUT_REDIRECT_URL = 'home'
-LOGIN_URL = 'accounts:login'  # Use the namespaced login URL
+ # Use the namespaced login URL

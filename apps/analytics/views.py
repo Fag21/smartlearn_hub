@@ -2,13 +2,15 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from datetime import timedelta
-from accounts import models
+from django.db.models import Sum, Count  # Add Count import
 from courses.models import Enrollment, LessonProgress
 from .models import UserLearningStat, StudySession, DailyGoal
-from django.db.models import Sum 
+
 @login_required
 def dashboard(request):
     user = request.user
+    
+    # Get or create user stats
     user_stats, created = UserLearningStat.objects.get_or_create(user=user)
     
     # Get recent enrollments with progress
@@ -59,7 +61,7 @@ def progress_analytics(request):
         start_time__gte=thirty_days_ago
     ).extra({
         'date': "DATE(start_time)"
-    }).values('date').annotate(total_duration=models.Sum('duration'))
+    }).values('date').annotate(total_duration=Sum('duration'))
     
     context = {
         'enrollments': enrollments,

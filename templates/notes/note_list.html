@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load tailwind_filters %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">My Notes</h1>
+                <p class="text-gray-600 mt-2">Organize your thoughts and ideas</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{% url 'notes:statistics' %}" 
+                   class="bg-white text-gray-700 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    📊 Statistics
+                </a>
+                <a href="{% url 'notes:note_create' %}" 
+                   class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    + New Note
+                </a>
+            </div>
+        </div>
+
+        <!-- Quick Note Form -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Note</h3>
+            <form method="post" action="{% url 'notes:quick_create' %}">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    {{ quick_note_form.title|as_crispy_field }}
+                    {{ quick_note_form.content|as_crispy_field }}
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+                            Save Quick Note
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <div class="flex flex-wrap gap-4">
+                <!-- Search -->
+                <div class="flex-1 min-w-[300px]">
+                    <form method="get" action="{% url 'notes:note_list' %}">
+                        <input type="text" name="q" placeholder="Search notes..." 
+                               value="{{ request.GET.q }}"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </form>
+                </div>
+                
+                <!-- Category Filter -->
+                <form method="get" action="{% url 'notes:note_list' %}" class="flex gap-4">
+                    <select name="category" onchange="this.form.submit()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                    
+                    <!-- Type Filter -->
+                    <select name="type" onchange="this.form.submit()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Types</option>
+                        <option value="text" {% if request.GET.type == "text" %}selected{% endif %}>Text</option>
+                        <option value="code" {% if request.GET.type == "code" %}selected{% endif %}>Code</option>
+                        <option value="math" {% if request.GET.type == "math" %}selected{% endif %}>Math</option>
+                        <option value="diagram" {% if request.GET.type == "diagram" %}selected{% endif %}>Diagram</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+
+        <!-- Notes Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for note in notes %}
+            <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border-l-4 
+                       {% if note.is_pinned %}border-yellow-400{% else %}border-transparent{% endif %}">
+                <div class="p-6">
+                    <div class="flex items-start justify-between mb-3">
+                        <h3 class="font-semibold text-gray-900 line-clamp-2">{{ note.title }}</h3>
+                        {% if note.is_pinned %}
+                        <span class="text-yellow-500" title="Pinned">📌</span>
+                        {% endif %}
+                    </div>
+                    
+                    <p class="text-gray-600 text-sm mb-4 line-clamp-3">{{ note.preview }}</p>
+                    
+                    <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
+                        <span>{{ note.word_count }} words</span>
+                        <span>{{ note.reading_time }} min read</span>
+                    </div>
+                    
+                    {% if note.category %}
+                    <span class="inline-block px-2 py-1 text-xs rounded-full text-white mb-3" 
+                          style="background-color: {{ note.category.color }}">
+                        {{ note.category.name }}
+                    </span>
+                    {% endif %}
+                    
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-500">{{ note.updated_at|timesince }} ago</span>
+                        <div class="flex space-x-2">
+                            <a href="{% url 'notes:note_detail' note.pk %}" 
+                               class="text-blue-600 hover:text-blue-700 text-sm">View</a>
+                            <a href="{% url 'notes:note_edit' note.pk %}" 
+                               class="text-green-600 hover:text-green-700 text-sm">Edit</a>
+                            <a href="{% url 'notes:toggle_pin' note.pk %}" 
+                               class="text-yellow-600 hover:text-yellow-700 text-sm">
+                                {% if note.is_pinned %}Unpin{% else %}Pin{% endif %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-12">
+                <p class="text-gray-500 text-lg">No notes yet. Create your first note!</p>
+                <a href="{% url 'notes:note_create' %}" class="text-blue-600 hover:text-blue-700 mt-2 inline-block">
+                    Create your first note
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="mt-8 flex justify-center">
+            <nav class="flex space-x-2">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-3 py-2 text-gray-500 hover:text-gray-700">← Previous</a>
+                {% endif %}
+                
+                <span class="px-3 py-2 text-blue-600 font-medium">{{ page_obj.number }}</span>
+                
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-3 py-2 text-gray-500 hover:text-gray-700">Next →</a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

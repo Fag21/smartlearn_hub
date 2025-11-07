@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">Note Statistics</h1>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-100 rounded-lg">
+                        <span class="text-blue-600">📝</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Total Notes</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.total_notes }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-100 rounded-lg">
+                        <span class="text-green-600">📌</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Pinned Notes</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.pinned_notes }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-purple-100 rounded-lg">
+                        <span class="text-purple-600">📚</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Total Words</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.total_words }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-orange-100 rounded-lg">
+                        <span class="text-orange-600">⏱️</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Total Reading Time</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.total_reading_time }} min</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Notes by Type -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">Notes by Type</h2>
+                <div class="space-y-3">
+                    {% for type in notes_by_type %}
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-700 capitalize">{{ type.note_type }}</span>
+                        <span class="font-semibold text-gray-900">{{ type.count }} notes</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Recent Notes -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">Recent Notes</h2>
+                <div class="space-y-4">
+                    {% for note in recent_notes %}
+                    <div class="border-l-4 border-blue-500 pl-4 py-2">
+                        <h3 class="font-medium text-gray-900">{{ note.title }}</h3>
+                        <p class="text-sm text-gray-600">{{ note.updated_at|timesince }} ago</p>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-500">No recent notes.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8">
+            <a href="{% url 'notes:note_list' %}" class="text-blue-600 hover:text-blue-700 font-medium">
+                ← Back to Notes
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

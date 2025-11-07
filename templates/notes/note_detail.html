@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            <!-- Note Header -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">{{ note.title }}</h1>
+                        <div class="flex items-center space-x-4 mt-2">
+                            {% if note.category %}
+                            <span class="inline-block px-3 py-1 text-sm rounded-full text-white" 
+                                  style="background-color: {{ note.category.color }}">
+                                {{ note.category.name }}
+                            </span>
+                            {% endif %}
+                            <span class="text-sm text-gray-500">{{ note.updated_at|timesince }} ago</span>
+                            {% if note.is_pinned %}
+                            <span class="text-yellow-500" title="Pinned">📌</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        {% if can_edit %}
+                        <a href="{% url 'notes:note_edit' note.pk %}" 
+                           class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
+                            Edit
+                        </a>
+                        <a href="{% url 'notes:toggle_pin' note.pk %}" 
+                           class="bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-yellow-700">
+                            {% if note.is_pinned %}Unpin{% else %}Pin{% endif %}
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'notes:ai_summary' note.pk %}" 
+                           class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700">
+                            AI Summary
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Note Content -->
+            <div class="px-6 py-4">
+                <div class="prose max-w-none">
+                    {{ note.content_html|safe }}
+                </div>
+            </div>
+
+            <!-- Note Footer -->
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                <div class="flex items-center justify-between text-sm text-gray-500">
+                    <div>
+                        <span>{{ note.word_count }} words • {{ note.reading_time }} min read</span>
+                    </div>
+                    <div>
+                        <span>Created: {{ note.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+
+                <!-- AI Summary Section -->
+                {% if note.ai_summary_generated %}
+                <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                    <h3 class="font-semibold text-blue-900 mb-2">AI Summary</h3>
+                    <p class="text-blue-800">{{ note.summary }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Key Points -->
+                {% if note.key_points %}
+                <div class="mt-4">
+                    <h3 class="font-semibold text-gray-900 mb-2">Key Points</h3>
+                    <ul class="list-disc list-inside text-gray-700">
+                        {% for point in note.key_points %}
+                        <li>{{ point }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="mt-6 flex justify-between">
+            <a href="{% url 'notes:note_list' %}" class="text-blue-600 hover:text-blue-700 font-medium">
+                ← Back to Notes
+            </a>
+            {% if is_owner %}
+            <div class="flex space-x-4">
+                <a href="{% url 'notes:archive_note' note.pk %}" class="text-gray-600 hover:text-gray-700 font-medium">
+                    Archive
+                </a>
+                <a href="{% url 'notes:note_delete' note.pk %}" class="text-red-600 hover:text-red-700 font-medium">
+                    Delete
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

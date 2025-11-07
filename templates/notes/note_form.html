@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load tailwind_filters %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h1 class="text-2xl font-bold text-gray-900">
+                    {% if form.instance.pk %}Edit Note{% else %}Create New Note{% endif %}
+                </h1>
+            </div>
+            
+            <form method="post" class="p-6">
+                {% csrf_token %}
+                
+                <div class="space-y-6">
+                    {{ form.title|as_crispy_field }}
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {{ form.category|as_crispy_field }}
+                        {{ form.note_type|as_crispy_field }}
+                    </div>
+                    
+                    {{ form.content|as_crispy_field }}
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {{ form.visibility|as_crispy_field }}
+                        <div class="flex items-center">
+                            {{ form.is_pinned|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 mt-8">
+                    <a href="{% url 'notes:note_list' %}" 
+                       class="bg-white text-gray-700 px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-200">
+                        Cancel
+                    </a>
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                        {% if form.instance.pk %}Update Note{% else %}Create Note{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Markdown Cheat Sheet -->
+        <div class="mt-8 bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Markdown Guide</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <p><code># Heading 1</code></p>
+                    <p><code>## Heading 2</code></p>
+                    <p><code>**Bold**</code></p>
+                    <p><code>*Italic*</code></p>
+                </div>
+                <div>
+                    <p><code>- List item</code></p>
+                    <p><code>[Link](http://example.com)</code></p>
+                    <p><code>`code`</code></p>
+                    <p><code>```code block```</code></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

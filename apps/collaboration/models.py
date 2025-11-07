@@ -1,126 +1,181 @@
 from django.db import models
 from django.urls import reverse
 from accounts.models import User
-from django.utils.text import slugify
-import markdown
-from django.utils.html import strip_tags
+from courses.models import Course
 
-class NoteCategory(models.Model):
-    name = models.CharField(max_length=100)
-    color = models.CharField(max_length=7, default='#3B82F6')
-    icon = models.CharField(max_length=50, default='📝')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='note_categories')
-    
-    class Meta:
-        verbose_name_plural = "Note categories"
-        unique_together = ['name', 'user']
-    
-    def __str__(self):
-        return f"{self.user.username} - {self.name}"
-
-class Note(models.Model):
-    NOTE_TYPES = (
-        ('text', 'Text Note'),
-        ('code', 'Code Snippet'),
-        ('math', 'Math Formula'),
-        ('diagram', 'Diagram'),
-    )
-    
+class StudyGroup(models.Model):
     VISIBILITY_CHOICES = (
         ('private', 'Private'),
-        ('shared', 'Shared with link'),
         ('public', 'Public'),
     )
     
-    title = models.CharField(max_length=200)
-    content = models.TextField(blank=True)
-    content_html = models.TextField(blank=True)  # Rendered HTML
-    summary = models.TextField(blank=True)  # AI-generated summary
-    note_type = models.CharField(max_length=20, choices=NOTE_TYPES, default='text')
-    category = models.ForeignKey(NoteCategory, on_delete=models.SET_NULL, 
-                               null=True, blank=True, related_name='notes')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notes')
-    
-    # Metadata
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, 
+                             related_name='study_groups', null=True, blank=True)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_groups')
     visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='private')
-    is_pinned = models.BooleanField(default=False)
-    is_archived = models.BooleanField(default=False)
-    word_count = models.IntegerField(default=0)
-    reading_time = models.IntegerField(default=0)  # in minutes
+    max_members = models.IntegerField(default=10)
     
-    # AI Features
-    ai_summary_generated = models.BooleanField(default=False)
-    key_points = models.JSONField(default=list, blank=True)  # Store AI-extracted key points
-    related_concepts = models.JSONField(default=list, blank=True)  # AI-suggested concepts
+    # Group settings
+    allow_join_requests = models.BooleanField(default=True)
+    allow_member_invites = models.BooleanField(default=True)
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    last_accessed = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.name
+    
+    def get_absolute_url(self):
+        return reverse('collaboration:study_group_detail', kwargs={'pk': self.pk})
+    
+    @property
+    def member_count(self):
+        return self.members.count()
+    
+    @property
+    def is_full(self):
+        return self.member_count >= self.max_members
+
+class GroupMember(models.Model):
+    ROLE_CHOICES = (
+        ('admin', 'Admin'),
+        ('moderator', 'Moderator'),
+        ('member', 'Member'),
+    )
+    
+    group = models.ForeignKey(StudyGroup, on_delete=models.CASCADE, related_name='members')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='group_memberships')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='member')
+    joined_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
     
     class Meta:
-        ordering = ['-is_pinned', '-updated_at']
+        unique_together = ['group', 'user']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.group.name}"
+
+class GroupInvitation(models.Model):
+    group = models.ForeignKey(StudyGroup, on_delete=models.CASCADE, related_name='invitations')
+    invited_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='group_invitations')
+    invited_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_invitations')
+    message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_accepted = models.BooleanField(default=False)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        unique_together = ['group', 'invited_user']
+    
+    def __str__(self):
+        return f"{self.group.name} -> {self.invited_user.username}"
+
+class ChatMessage(models.Model):
+    MESSAGE_TYPES = (
+        ('text', 'Text'),
+        ('system', 'System Message'),
+        ('file', 'File Share'),
+    )
+    
+    group = models.ForeignKey(StudyGroup, on_delete=models.CASCADE, related_name='messages')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_messages')
+    message_type = models.CharField(max_length=20, choices=MESSAGE_TYPES, default='text')
+    content = models.TextField()
+    file = models.FileField(upload_to='group_chat_files/', blank=True, null=True)
+    
+    # Reply functionality
+    reply_to = models.ForeignKey('self', on_delete=models.SET_NULL, 
+                               null=True, blank=True, related_name='replies')
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['created_at']
+    
+    def __str__(self):
+        return f"{self.user.username}: {self.content[:50]}"
+
+class SharedResource(models.Model):
+    RESOURCE_TYPES = (
+        ('note', 'Note'),
+        ('file', 'File'),
+        ('link', 'Link'),
+        ('assignment', 'Assignment'),
+    )
+    
+    group = models.ForeignKey(StudyGroup, on_delete=models.CASCADE, related_name='resources')
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shared_resources')
+    resource_type = models.CharField(max_length=20, choices=RESOURCE_TYPES, default='file')
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    file = models.FileField(upload_to='group_resources/', blank=True, null=True)
+    url = models.URLField(blank=True)
+    # Reference to note from notes app
+    note = models.ForeignKey('notes.Note', on_delete=models.CASCADE, 
+                           null=True, blank=True, related_name='shared_in_groups')
+    
+    # Metadata
+    download_count = models.IntegerField(default=0)
+    is_pinned = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
         return self.title
-    
-    def get_absolute_url(self):
-        return reverse('notes:note_detail', kwargs={'pk': self.pk})
-    
-    def save(self, *args, **kwargs):
-        # Convert markdown to HTML
-        if self.content:
-            self.content_html = markdown.markdown(self.content)
-            # Calculate word count (rough estimate)
-            plain_text = strip_tags(self.content_html)
-            self.word_count = len(plain_text.split())
-            self.reading_time = max(1, self.word_count // 200)  # 200 wpm
-        super().save(*args, **kwargs)
-    
-    @property
-    def preview(self):
-        """Return a short preview of the content"""
-        if self.summary:
-            return self.summary[:150] + '...' if len(self.summary) > 150 else self.summary
-        plain_text = strip_tags(self.content_html)
-        return plain_text[:150] + '...' if len(plain_text) > 150 else plain_text
 
-class NoteTag(models.Model):
-    name = models.CharField(max_length=50)
-    color = models.CharField(max_length=7, default='#6B7280')
-    notes = models.ManyToManyField(Note, related_name='tags', blank=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='note_tags')
+class Assignment(models.Model):
+    group = models.ForeignKey(StudyGroup, on_delete=models.CASCADE, related_name='assignments')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_assignments')
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    due_date = models.DateTimeField()
+    max_points = models.IntegerField(default=100)
     
-    class Meta:
-        unique_together = ['name', 'user']
+    # Submission settings
+    allow_late_submissions = models.BooleanField(default=False)
+    allow_resubmissions = models.BooleanField(default=False)
     
-    def __str__(self):
-        return f"{self.user.username} - {self.name}"
-
-class NoteVersion(models.Model):
-    note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name='versions')
-    content = models.TextField()
-    version_number = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    
-    class Meta:
-        ordering = ['-version_number']
-        unique_together = ['note', 'version_number']
+    updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f"{self.note.title} - v{self.version_number}"
+        return f"{self.group.name} - {self.title}"
 
-class NoteCollaborator(models.Model):
-    note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name='collaborators')
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    can_edit = models.BooleanField(default=True)
-    added_at = models.DateTimeField(auto_now_add=True)
-    added_by = models.ForeignKey(User, on_delete=models.CASCADE, 
-                               related_name='added_collaborators')
+class Submission(models.Model):
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='submissions')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assignment_submissions')
+    content = models.TextField()
+    file = models.FileField(upload_to='assignment_submissions/', blank=True, null=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    is_late = models.BooleanField(default=False)
+    
+    # Grading
+    points = models.IntegerField(null=True, blank=True)
+    feedback = models.TextField(blank=True)
+    graded_by = models.ForeignKey(User, on_delete=models.SET_NULL, 
+                                null=True, blank=True, related_name='graded_submissions')
+    graded_at = models.DateTimeField(null=True, blank=True)
     
     class Meta:
-        unique_together = ['note', 'user']
+        unique_together = ['assignment', 'user']
     
     def __str__(self):
-        return f"{self.user.username} -> {self.note.title}"
+        return f"{self.user.username} - {self.assignment.title}"
+
+class PeerReview(models.Model):
+    submission = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name='peer_reviews')
+    reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='given_reviews')
+    rating = models.IntegerField(help_text="Rating from 1-5")
+    comments = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['submission', 'reviewer']
+    
+    def __str__(self):
+        return f"Review by {self.reviewer.username} for {self.submission.user.username}"

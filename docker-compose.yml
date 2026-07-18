@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: smartlearn-postgres
+    environment:
+      POSTGRES_DB: smartlearn_hub
+      POSTGRES_USER: smartlearn
+      POSTGRES_PASSWORD: smartlearn_dev_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smartlearn -d smartlearn_hub"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: smartlearn-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: smartlearn-web
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=core.settings.development
+      - DEBUG=True
+      - DATABASE_URL=postgresql://smartlearn:smartlearn_dev_password@postgres:5432/smartlearn_hub
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: smartlearn-celery
+    command: celery -A core worker -l info -Q default,ai_tasks,notifications,analytics --concurrency=2 --prefetch-multiplier=1
+    volumes:
+      - .:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=core.settings.development
+      - DATABASE_URL=postgresql://smartlearn:smartlearn_dev_password@postgres:5432/smartlearn_hub
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: smartlearn-celery-beat
+    command: celery -A core beat -l info
+    volumes:
+      - .:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=core.settings.development
+      - DATABASE_URL=postgresql://smartlearn:smartlearn_dev_password@postgres:5432/smartlearn_hub
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  daphne:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: smartlearn-daphne
+    command: daphne -b 0.0.0.0 -p 8001 core.asgi:application
+    volumes:
+      - .:/app
+    ports:
+      - "8001:8001"
+    environment:
+      - DJANGO_SETTINGS_MODULE=core.settings.development
+      - DATABASE_URL=postgresql://smartlearn:smartlearn_dev_password@postgres:5432/smartlearn_hub
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:

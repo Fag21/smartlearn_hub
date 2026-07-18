@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Assignments – {{ group.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4">
+        <div class="mb-6">
+            <a href="{% url 'collaboration:study_group_detail' group.pk %}" class="text-blue-600 hover:underline">← Back to group</a>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900 mb-4">Assignments – {{ group.name }}</h1>
+        <p class="mb-4"><a href="{% url 'collaboration:create_assignment' group.pk %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Create assignment</a></p>
+        <div class="bg-white rounded-lg shadow p-6">
+            <ul class="space-y-4">
+                {% for a in assignments %}
+                <li class="border-b border-gray-100 pb-4">
+                    <h3 class="font-semibold text-gray-900">{{ a.title }}</h3>
+                    <p class="text-sm text-gray-600">{{ a.description|truncatewords:30 }}</p>
+                    <p class="text-xs text-gray-500">Due {{ a.due_date|date }} • {{ a.max_points }} pts</p>
+                </li>
+                {% empty %}
+                <li class="text-gray-500">No assignments yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

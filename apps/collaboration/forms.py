@@ -1,42 +1,29 @@
 from django import forms
-from .models import Note, NoteCategory, NoteTag
 
-class NoteForm(forms.ModelForm):
-    class Meta:
-        model = Note
-        fields = ['title', 'content', 'category', 'note_type', 'visibility', 'is_pinned']
-        widgets = {
-            'content': forms.Textarea(attrs={
-                'rows': 15,
-                'class': 'markdown-editor',
-                'placeholder': 'Write your note in Markdown...'
-            }),
-            'title': forms.TextInput(attrs={
-                'placeholder': 'Note title...'
-            }),
-        }
+from .models import Assignment, SharedResource, StudyGroup
 
-class NoteCategoryForm(forms.ModelForm):
-    class Meta:
-        model = NoteCategory
-        fields = ['name', 'color', 'icon']
 
-class NoteTagForm(forms.ModelForm):
+class StudyGroupForm(forms.ModelForm):
     class Meta:
-        model = NoteTag
-        fields = ['name', 'color']
+        model = StudyGroup
+        fields = [
+            "name",
+            "description",
+            "course",
+            "visibility",
+            "max_members",
+            "allow_join_requests",
+            "allow_member_invites",
+        ]
 
-class QuickNoteForm(forms.ModelForm):
-    """Form for creating quick notes without all fields"""
+
+class SharedResourceForm(forms.ModelForm):
     class Meta:
-        model = Note
-        fields = ['title', 'content']
-        widgets = {
-            'content': forms.Textarea(attrs={
-                'rows': 5,
-                'placeholder': 'Start typing your note...'
-            }),
-            'title': forms.TextInput(attrs={
-                'placeholder': 'Quick note title...'
-            }),
-        }
+        model = SharedResource
+        fields = ["title", "description", "file", "url", "resource_type"]
+
+
+class AssignmentForm(forms.ModelForm):
+    class Meta:
+        model = Assignment
+        fields = ["title", "description", "due_date", "max_points", "allow_late_submissions", "allow_resubmissions"]

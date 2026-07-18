@@ -1,0 +1,122 @@
+name: CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      version:
+        description: 'Docker image tag to deploy'
+        required: false
+        type: string
+        default: 'latest'
+
+  push:
+    tags:
+      - 'v*'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.event.inputs.environment == 'staging' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull image
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.version || 'latest' }}
+
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging..."
+          # Add your staging deployment commands here
+          # Example: ssh to staging server and run docker-compose pull && docker-compose up -d
+
+      - name: Run migrations
+        run: |
+          echo "Running migrations..."
+          # docker-compose exec web python manage.py migrate --noinput
+
+      - name: Health check
+        run: |
+          echo "Running health checks..."
+          # curl -f https://staging.smartlearn.com/health/ || exit 1
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.event.inputs.environment == 'production'
+    environment: production
+    needs: deploy-staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull image
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.version || 'latest' }}
+
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production..."
+          # Add your production deployment commands here
+          # Example: ssh to production server and run docker-compose -f docker-compose.prod.yml pull && docker-compose -f docker-compose.prod.yml up -d
+
+      - name: Run migrations
+        run: |
+          echo "Running migrations..."
+          # docker-compose -f docker-compose.prod.yml exec web python manage.py migrate --noinput
+
+      - name: Health check
+        run: |
+          echo "Running health checks..."
+          # curl -f https://smartlearn.com/health/ || exit 1
+
+      - name: Post-deploy smoke tests
+        run: |
+          echo "Running smoke tests..."
+          # Add your smoke test commands here
+
+  rollback:
+    name: Rollback
+    runs-on: ubuntu-latest
+    if: failure() && github.event.inputs.environment == 'production'
+    needs: deploy-production
+    steps:
+      - name: Rollback production
+        run: |
+          echo "Rolling back production deployment..."
+          # Add your rollback commands here
+          # Example: ssh to production server and run previous docker-compose version

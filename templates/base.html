@@ -9,6 +9,66 @@
     <script src="https://unpkg.com/chart.js"></script>
     {% block extra_head %}{% endblock %}
 </head>
+<style>
+.prose {
+    max-width: none;
+    line-height: 1.6;
+}
+
+.prose h1 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.prose h2 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.prose p {
+    margin-bottom: 1rem;
+}
+
+.prose ul {
+    list-style-type: disc;
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.prose ol {
+    list-style-type: decimal;
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.prose code {
+    background-color: #f3f4f6;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-family: monospace;
+}
+
+.prose pre {
+    background-color: #1f2937;
+    color: #f9fafb;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+.prose blockquote {
+    border-left: 4px solid #d1d5db;
+    padding-left: 1rem;
+    margin-left: 0;
+    font-style: italic;
+    margin-bottom: 1rem;
+}
+</style>
 <body class="bg-gray-50" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
     <!-- Navigation -->
     <nav class="bg-white shadow-lg">
@@ -22,12 +82,14 @@
                         <!-- We'll add these links when we create the apps -->
                         <!-- Update the navigation links -->
 
+ 
     <a href="{% url 'courses:course_list' %}" class="text-gray-900 hover:text-blue-600 px-3 py-2 text-sm font-medium">Courses</a>
-    <a href="#" class="text-gray-900 hover:text-blue-600 px-3 py-2 text-sm font-medium">Notes</a>
-    <a href="#" class="text-gray-900 hover:text-blue-600 px-3 py-2 text-sm font-medium">Analytics</a>
-    <a href="#" class="text-gray-900 hover:text-blue-600 px-3 py-2 text-sm font-medium">Groups</a>
+    <a href="{% url 'notes:note_list' %}" class="text-gray-900 hover:text-blue-600 px-3 py-2 text-sm font-medium">Notes</a>
+    <a href="{% url 'analytics:dashboard' %}" class="text-gray-900 hover:text-blue-600 px-3 py-2 text-sm font-medium">Analytics</a>
+    <a href="{% url 'collaboration:study_groups' %}" class="text-gray-900 hover:text-blue-600 px-3 py-2 text-sm font-medium">Groups</a>
 
-                        <a href="#" class="text-gray-900 hover:text-blue-600 px-3 py-2 text-sm font-medium">Groups</a>
+
+                       
                     </div>
                 </div>
                 <div class="flex items-center">
